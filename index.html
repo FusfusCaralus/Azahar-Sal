@@ -69,11 +69,10 @@
 
   .stage{
     width:100%;
-    max-width: var(--stagemax, min(97vw, 720px));
-    max-height:76vh;
-    max-height:76dvh;
-    transition: max-width 0.7s cubic-bezier(.65,.05,.36,1);
-    flex: 1 1 auto;
+    max-width:min(92vw, 640px);
+    max-height:80vh;
+    max-height:80dvh;
+    flex: 0 1 auto;
     perspective: 1800px;
     -webkit-tap-highlight-color: transparent;
     touch-action: pan-y;
@@ -88,9 +87,9 @@
     position:relative;
     width:100%;
     height:100%;
-    max-width:100%;
-    max-height:100%;
-    aspect-ratio: var(--ar, 1 / 1);
+    max-width:min(92vw, 640px);
+    max-height:min(92vw, 640px);
+    aspect-ratio: 1 / 1;
     transform-style:preserve-3d;
     transition: transform 0.7s cubic-bezier(.65,.05,.36,1);
     will-change: transform;
@@ -120,6 +119,15 @@
     object-fit:contain;
     display:block;
     pointer-events:none;
+    transition: max-width .35s ease, max-height .35s ease;
+  }
+  .face img.as-card{
+    max-width:82%;
+    max-height:82%;
+    width:auto;
+    height:auto;
+    border-radius:6px;
+    box-shadow: 0 14px 30px -10px rgba(40,60,55,0.28);
   }
 
   .dots{
@@ -216,25 +224,16 @@
 
   function next(idx){ return (idx + 1) % images.length; }
 
-  function setAspectFromImg(img){
-    if (img.naturalWidth && img.naturalHeight){
-      card.style.setProperty('--ar', img.naturalWidth + ' / ' + img.naturalHeight);
-    }
+  // "thanks.jpg" (the account/IBAN page) shows at real card size, floating
+  // inside the same square frame as the other two pages.
+  function setCardLook(imgEl, imageIndex){
+    imgEl.classList.toggle('as-card', images[imageIndex] === 'thanks.jpg');
   }
 
-  // "thanks.jpg" (the account/IBAN page) shows at real card size; the other
-  // two pages fill as much of the screen as possible.
-  function setStageSizeFor(imageIndex){
-    var isCardPage = images[imageIndex] === 'thanks.jpg';
-    stage.style.setProperty('--stagemax', isCardPage ? 'min(80vw, 420px)' : 'min(97vw, 720px)');
-  }
-
-  setStageSizeFor(idx);
-
-  if (imgFront.complete) setAspectFromImg(imgFront);
-  imgFront.addEventListener('load', function(){ setAspectFromImg(imgFront); });
+  setCardLook(imgFront, idx);
 
   imgBack.src = images[next(idx)];
+  setCardLook(imgBack, next(idx));
 
   function setDots(activeIdx){
     dots.forEach(function(d){
@@ -261,14 +260,8 @@
       card.classList.remove('spin');
       imgFront.src = images[idx];
       imgBack.src = images[upcoming];
-      setAspectFromImg(imgFront);
-      setStageSizeFor(idx);
-      if (!imgFront.complete) {
-        imgFront.addEventListener('load', function onLoad(){
-          imgFront.removeEventListener('load', onLoad);
-          setAspectFromImg(imgFront);
-        });
-      }
+      setCardLook(imgFront, idx);
+      setCardLook(imgBack, upcoming);
 
       // Force reflow so the browser applies the no-transition jump before we re-enable it.
       void card.offsetWidth;
