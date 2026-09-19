@@ -225,6 +225,21 @@
     50%{ transform: scale(1.18); opacity:1; }
   }
 
+  .music{
+    width:100%;
+    max-width:min(92vw, 420px);
+    flex:0 0 auto;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow: 0 10px 26px -12px rgba(40,60,55,0.35);
+    opacity:0.96;
+  }
+  .music iframe{
+    display:block;
+    width:100%;
+    border:0;
+  }
+
   @media (prefers-reduced-motion: reduce){
     .card{ transition-duration: .01ms; }
     .hint svg{ animation: none; }
@@ -277,7 +292,18 @@
     </svg>
     <span>Toca para pasar la página</span>
   </div>
+
+  <div class="music" id="music">
+    <iframe id="spotifyEmbed"
+      src="https://open.spotify.com/embed/track/2mMZ6RsGVCUJwNuJekjlAx?utm_source=generator&theme=0"
+      height="80"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy"
+      title="Canción de la boda"></iframe>
+  </div>
 </div>
+
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 
 <script>
 (function(){
@@ -291,8 +317,14 @@
   var faceBack = document.querySelector('.face.back');
   var imgFront = document.getElementById('imgFront');
   var imgBack = document.getElementById('imgBack');
+  var ibanFront = document.getElementById('ibanFront');
+  var ibanBack = document.getElementById('ibanBack');
+  var toast = document.getElementById('toast');
   var hint = document.getElementById('hint');
   var dots = Array.prototype.slice.call(document.querySelectorAll('.dot'));
+
+  var IBAN_TEXT = "ES03 0128 7820 8101 0256 1495";
+  var IBAN_RAW = "ES0301287820810102561495";
 
   function next(idx){ return (idx + 1) % images.length; }
 
@@ -304,10 +336,72 @@
     faceEl.classList.toggle('is-card-face', isCard);
   }
 
+  function positionIbanButton(imgEl, btnEl){
+    if (!imgEl.classList.contains('as-card')){
+      btnEl.classList.remove('visible');
+      return;
+    }
+    var rect = imgEl.getBoundingClientRect();
+    var parentRect = imgEl.parentElement.getBoundingClientRect();
+    if (!rect.width){ btnEl.classList.remove('visible'); return; }
+    var left = rect.left - parentRect.left;
+    var top = rect.top - parentRect.top;
+    btnEl.style.left = (left + rect.width * 0.150) + 'px';
+    btnEl.style.top = (top + rect.height * 0.505) + 'px';
+    btnEl.style.width = (rect.width * 0.700) + 'px';
+    btnEl.style.height = (rect.height * 0.115) + 'px';
+    btnEl.style.fontSize = Math.max(9, rect.height * 0.062) + 'px';
+    btnEl.classList.add('visible');
+  }
+
+  function positionAllIbanButtons(){
+    positionIbanButton(imgFront, ibanFront);
+    positionIbanButton(imgBack, ibanBack);
+  }
+
+  function showToast(){
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ toast.classList.remove('show'); }, 1600);
+  }
+
+  function copyIban(e){
+    e.preventDefault();
+    e.stopPropagation();
+    function done(){ showToast(); }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(IBAN_RAW).then(done).catch(function(){ fallbackCopy(); });
+    } else {
+      fallbackCopy();
+    }
+    function fallbackCopy(){
+      var ta = document.createElement('textarea');
+      ta.value = IBAN_RAW;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try { document.execCommand('copy'); } catch(err){}
+      document.body.removeChild(ta);
+      done();
+    }
+  }
+
+  ibanFront.addEventListener('click', copyIban);
+  ibanBack.addEventListener('click', copyIban);
+
+  window.addEventListener('resize', positionAllIbanButtons);
+  window.addEventListener('orientationchange', function(){ setTimeout(positionAllIbanButtons, 60); });
+  imgFront.addEventListener('load', positionAllIbanButtons);
+  imgBack.addEventListener('load', positionAllIbanButtons);
+
   setCardLook(faceFront, imgFront, idx);
 
   imgBack.src = images[next(idx)];
   setCardLook(faceBack, imgBack, next(idx));
+
+  positionAllIbanButtons();
 
   function setDots(activeIdx){
     dots.forEach(function(d){
@@ -341,6 +435,7 @@
       void card.offsetWidth;
       card.classList.remove('noanim');
 
+      positionAllIbanButtons();
       setDots(idx);
       spinning = false;
     });
@@ -367,6 +462,34 @@
     touchStartX = null;
     if (Math.abs(dx) > 30) flip();
   }, {passive:true});
+
+  // Start the Spotify track on the first tap/click anywhere on the page
+  // (browsers block audio with sound from starting on its own, so this
+  // rides on the very first interaction — usually the tap that opens the card).
+  var spotifyController = null;
+  var wantsToPlay = true;
+
+  window.onSpotifyIframeApiReady = function(IFrameAPI){
+    var element = document.getElementById('spotifyEmbed');
+    var options = { uri: 'spotify:track:2mMZ6RsGVCUJwNuJekjlAx' };
+    IFrameAPI.createController(element, options, function(EmbedController){
+      spotifyController = EmbedController;
+      if (wantsToPlay) {
+        try { spotifyController.play(); } catch(err){}
+      }
+    });
+  };
+
+  function startMusicOnce(){
+    wantsToPlay = true;
+    if (spotifyController) {
+      try { spotifyController.play(); } catch(err){}
+    }
+    document.removeEventListener('pointerdown', startMusicOnce);
+    document.removeEventListener('touchstart', startMusicOnce);
+  }
+  document.addEventListener('pointerdown', startMusicOnce, {once:true, passive:true});
+  document.addEventListener('touchstart', startMusicOnce, {once:true, passive:true});
 })();
 </script>
 </body>
