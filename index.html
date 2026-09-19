@@ -107,6 +107,7 @@
     margin:auto;
   }
   .card.spin{ transform: rotateY(180deg); }
+  .card.spin-prev{ transform: rotateY(-180deg); }
   .card.noanim{ transition:none !important; }
 
   .face{
@@ -399,6 +400,7 @@
   var IBAN_RAW = "ES0301287820810102561495";
 
   function next(idx){ return (idx + 1) % images.length; }
+  function prev(idx){ return (idx - 1 + images.length) % images.length; }
 
   // "thanks.jpg" (the account/IBAN page) shows at real card size, floating
   // directly on the textured background instead of inside a white square,
@@ -464,27 +466,33 @@
     });
   }
 
-  function flip(){
+  // direction: 'next' (flips toward the right) or 'prev' (flips toward the left)
+  function flip(direction){
     if (spinning) return;
     spinning = true;
     hint.classList.add('fade');
 
-    card.classList.add('spin');
+    var isNext = direction !== 'prev';
+    var target = isNext ? next(idx) : prev(idx);
+
+    // Load the destination image onto the back face before rotating, so it's
+    // already the right content the instant the flip reveals that face.
+    imgBack.src = images[target];
+    setCardLook(faceBack, cardWrapBack, target);
+
+    card.classList.add(isNext ? 'spin' : 'spin-prev');
 
     card.addEventListener('transitionend', function onEnd(e){
       if (e.propertyName !== 'transform') return;
       card.removeEventListener('transitionend', onEnd);
 
-      idx = next(idx);
-      var upcoming = next(idx);
+      idx = target;
 
       // Snap back to 0deg instantly, with the (now current) image as the front face.
       card.classList.add('noanim');
-      card.classList.remove('spin');
+      card.classList.remove('spin', 'spin-prev');
       imgFront.src = images[idx];
-      imgBack.src = images[upcoming];
       setCardLook(faceFront, cardWrapFront, idx);
-      setCardLook(faceBack, cardWrapBack, upcoming);
 
       // Force reflow so the browser applies the no-transition jump before we re-enable it.
       void card.offsetWidth;
@@ -495,17 +503,24 @@
     });
   }
 
-  stage.addEventListener('click', flip);
+  stage.addEventListener('click', function(e){
+    var rect = stage.getBoundingClientRect();
+    var x = e.clientX - rect.left;
+    flip(x < rect.width / 2 ? 'prev' : 'next');
+  });
 
   stage.addEventListener('keydown', function(e){
-    if (e.key === 'Enter' || e.key === ' '){
+    if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight'){
       e.preventDefault();
-      flip();
+      flip('next');
+    } else if (e.key === 'ArrowLeft'){
+      e.preventDefault();
+      flip('prev');
     }
   });
   stage.setAttribute('tabindex', '0');
 
-  // basic swipe support
+  // basic swipe support: swipe left -> next page, swipe right -> previous page
   var touchStartX = null;
   stage.addEventListener('touchstart', function(e){
     touchStartX = e.touches[0].clientX;
@@ -514,7 +529,7 @@
     if (touchStartX === null) return;
     var dx = e.changedTouches[0].clientX - touchStartX;
     touchStartX = null;
-    if (Math.abs(dx) > 30) flip();
+    if (Math.abs(dx) > 30) flip(dx < 0 ? 'next' : 'prev');
   }, {passive:true});
 
   // Start the song the moment the page is ready, quiet and steady (no
