@@ -46,10 +46,10 @@
     inset:0;
     z-index:0;
     pointer-events:none;
-    opacity:0.22;
+    opacity:0.30;
     mix-blend-mode:multiply;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><g fill='none' stroke='%237f9a8c' stroke-width='1' stroke-linecap='round' opacity='0.55'><path d='M-10 88 Q 12 76 34 88 T 78 88 T 122 88'/></g><g fill='%237f9a8c' opacity='0.45'><ellipse cx='18' cy='24' rx='6.5' ry='2.6' transform='rotate(-28 18 24)'/></g><g stroke='%236c8f83' stroke-width='0.5' opacity='0.5'><path d='M13 27 L23 21'/></g><g fill='%239487a8' opacity='0.4'><ellipse cx='72' cy='16' rx='6' ry='2.4' transform='rotate(48 72 16)'/></g><g stroke='%238678a0' stroke-width='0.5' opacity='0.45'><path d='M68 20 L76 12'/></g><g fill='%237f9a8c' opacity='0.32'><ellipse cx='80' cy='62' rx='5' ry='2' transform='rotate(-15 80 62)'/></g><g stroke='%236c8f83' stroke-width='0.5' opacity='0.4'><path d='M76 64 L84 60'/></g><g fill='%239487a8' opacity='0.3'><ellipse cx='40' cy='50' rx='4.5' ry='1.9' transform='rotate(20 40 50)'/></g><g stroke='%238678a0' stroke-width='0.5' opacity='0.35'><path d='M36 51 L44 49'/></g></svg>");
-    background-size:100px 100px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='72' height='72'><g fill='none' stroke='%237f9a8c' stroke-width='0.9' stroke-linecap='round' opacity='0.55'><path d='M-6 14 Q 6 6 18 14 T 42 14 T 66 14 T 90 14'/><path d='M-6 50 Q 6 42 18 50 T 42 50 T 66 50 T 90 50'/></g><g fill='%237f9a8c' opacity='0.42'><ellipse cx='10' cy='38' rx='5.4' ry='2.1' transform='rotate(-30 10 38)'/></g><g stroke='%236c8f83' stroke-width='0.45' opacity='0.5'><path d='M6.5 39.6 L13.5 36.4'/></g><g fill='%239487a8' opacity='0.4'><ellipse cx='50' cy='6' rx='4.8' ry='1.9' transform='rotate(38 50 6)'/></g><g stroke='%238678a0' stroke-width='0.45' opacity='0.45'><path d='M47 8.6 L53 3.4'/></g><g fill='%237f9a8c' opacity='0.36'><ellipse cx='60' cy='42' rx='4.4' ry='1.8' transform='rotate(-15 60 42)'/></g><g stroke='%236c8f83' stroke-width='0.45' opacity='0.4'><path d='M57 43.4 L63 40.6'/></g><g fill='%239487a8' opacity='0.34'><ellipse cx='30' cy='28' rx='4.2' ry='1.7' transform='rotate(60 30 28)'/></g><g stroke='%238678a0' stroke-width='0.45' opacity='0.38'><path d='M28.2 24.4 L31.8 31.6'/></g><g fill='%237f9a8c' opacity='0.3'><ellipse cx='42' cy='60' rx='3.8' ry='1.5' transform='rotate(-42 42 60)'/></g><g stroke='%236c8f83' stroke-width='0.4' opacity='0.36'><path d='M39.6 62.6 L44.4 57.4'/></g><g fill='%239487a8' opacity='0.3'><ellipse cx='2' cy='62' rx='3.6' ry='1.4' transform='rotate(20 2 62)'/></g></svg>");
+    background-size:72px 72px;
   }
   .screen{
     width:100%;
@@ -133,6 +133,57 @@
     box-shadow: 0 14px 30px -10px rgba(40,60,55,0.28);
   }
 
+  .iban-btn{
+    position:absolute;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:0.5em;
+    border:none;
+    background:transparent;
+    padding:0;
+    margin:0;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight:600;
+    letter-spacing:0.09em;
+    color: var(--iban-green, #4c7a63);
+    white-space:nowrap;
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  .iban-btn.visible{ display:flex; }
+  .iban-btn:active{ transform: scale(0.96); opacity:0.75; }
+  .iban-btn svg{
+    width:0.85em;
+    height:0.85em;
+    flex:0 0 auto;
+    opacity:0.8;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom: max(26px, env(safe-area-inset-bottom));
+    transform: translate(-50%, 12px);
+    background: #3f5a4d;
+    color:#fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size:13px;
+    letter-spacing:.02em;
+    padding:10px 18px;
+    border-radius:999px;
+    box-shadow: 0 10px 24px -8px rgba(20,30,26,0.4);
+    opacity:0;
+    pointer-events:none;
+    transition: opacity .25s ease, transform .25s ease;
+    z-index:5;
+  }
+  .toast.show{
+    opacity:1;
+    transform: translate(-50%, 0);
+  }
+
   .dots{
     display:flex;
     gap:9px;
@@ -187,12 +238,28 @@
     <div class="card" id="card">
       <div class="face front">
         <img id="imgFront" src="cover.jpg" alt="">
+        <button class="iban-btn" id="ibanFront" type="button" aria-label="Copiar número de cuenta">
+          <span>ES03 0128 7820 8101 0256 1495</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="12" height="12" rx="2"/>
+            <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
+          </svg>
+        </button>
       </div>
       <div class="face back">
         <img id="imgBack" src="invite.jpg" alt="">
+        <button class="iban-btn" id="ibanBack" type="button" aria-label="Copiar número de cuenta">
+          <span>ES03 0128 7820 8101 0256 1495</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="12" height="12" rx="2"/>
+            <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
+
+  <div class="toast" id="toast">Número copiado</div>
 
   <div class="dots" id="dots">
     <span class="dot active" data-i="0"></span>
