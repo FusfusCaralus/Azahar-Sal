@@ -561,14 +561,33 @@
     wantsPlay = true;
     if (!spotifyController || playStarted) return;
     playStarted = true;
+
+    // Each step gets its own try/catch: if one of these calls isn't
+    // supported and throws, it must never stop the others — play() above
+    // all has to run regardless.
     try {
-      spotifyController.setVolume(0.008);
+      if (typeof spotifyController.setVolume === 'function'){
+        spotifyController.setVolume(0.008);
+      }
+    } catch(err){}
+
+    try {
       if (typeof spotifyController.seek === 'function'){
         spotifyController.seek(0);
       }
-      spotifyController.play();
-      fadeIn();
     } catch(err){}
+
+    try {
+      spotifyController.play();
+    } catch(err){
+      // Retry once shortly after — some browsers need the controller to
+      // finish initializing before play() is accepted.
+      setTimeout(function(){
+        try { spotifyController.play(); } catch(err2){}
+      }, 300);
+    }
+
+    fadeIn();
   }
 
   window.onSpotifyIframeApiReady = function(IFrameAPI){
