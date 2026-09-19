@@ -514,42 +514,61 @@
   var masterGain = null;
   var ambientStarted = false;
 
-  function buildWaves(ctx, destination){
-    var bufferSeconds = 6;
-    var bufferSize = bufferSeconds * ctx.sampleRate;
+  function makeNoiseBuffer(ctx, seconds){
+    var bufferSize = seconds * ctx.sampleRate;
     var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     var data = buffer.getChannelData(0);
     var lastOut = 0;
     for (var i = 0; i < bufferSize; i++){
       var white = Math.random() * 2 - 1;
-      lastOut = (lastOut + 0.018 * white) / 1.018;
+      lastOut = (lastOut + 0.02 * white) / 1.02;
       data[i] = lastOut * 3.2;
     }
+    return buffer;
+  }
 
-    var noise = ctx.createBufferSource();
-    noise.buffer = buffer;
-    noise.loop = true;
-
-    var filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 620;
+  function buildWaves(ctx, destination){
+    var buffer = makeNoiseBuffer(ctx, 6);
 
     var waveGain = ctx.createGain();
-    waveGain.gain.value = 0.26;
-
-    noise.connect(filter);
-    filter.connect(waveGain);
+    waveGain.gain.value = 0.34;
     waveGain.connect(destination);
+
+    // Low rumble of the swell itself.
+    var rumble = ctx.createBufferSource();
+    rumble.buffer = buffer;
+    rumble.loop = true;
+    var rumbleFilter = ctx.createBiquadFilter();
+    rumbleFilter.type = 'lowpass';
+    rumbleFilter.frequency.value = 500;
+    rumble.connect(rumbleFilter);
+    rumbleFilter.connect(waveGain);
+
+    // Higher "hiss" of foam/spray — small phone speakers can't reproduce
+    // deep rumble well, so this is what actually carries the wave sound.
+    var hiss = ctx.createBufferSource();
+    hiss.buffer = buffer;
+    hiss.loop = true;
+    var hissFilter = ctx.createBiquadFilter();
+    hissFilter.type = 'bandpass';
+    hissFilter.frequency.value = 2600;
+    hissFilter.Q.value = 0.6;
+    var hissGain = ctx.createGain();
+    hissGain.gain.value = 0.55;
+    hiss.connect(hissFilter);
+    hissFilter.connect(hissGain);
+    hissGain.connect(waveGain);
 
     // Slow swelling LFO so the waves breathe in and out like a real shore.
     var lfo = ctx.createOscillator();
     lfo.frequency.value = 0.09;
     var lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.14;
+    lfoGain.gain.value = 0.16;
     lfo.connect(lfoGain);
     lfoGain.connect(waveGain.gain);
 
-    noise.start();
+    rumble.start();
+    hiss.start();
     lfo.start();
   }
 
@@ -596,7 +615,7 @@
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.0001;
       masterGain.connect(audioCtx.destination);
-      masterGain.gain.linearRampToValueAtTime(0.16, audioCtx.currentTime + 2.5);
+      masterGain.gain.linearRampToValueAtTime(0.22, audioCtx.currentTime + 2.5);
 
       buildWaves(audioCtx, masterGain);
       scheduleBirds(audioCtx, masterGain);
