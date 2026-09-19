@@ -182,9 +182,11 @@
     -webkit-tap-highlight-color: transparent;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-weight:600;
+    line-height:1;
     letter-spacing:0.09em;
     color: var(--iban-green, #4c7a63);
     white-space:nowrap;
+    overflow:hidden;
     transition: transform .15s ease, opacity .15s ease;
   }
   .iban-btn.visible{ display:flex; }
@@ -383,11 +385,13 @@
   }
 
   function fitIbanText(btnEl){
-    if (btnEl.style.display === 'none' || getComputedStyle(btnEl).display === 'none') return;
+    if (getComputedStyle(btnEl).display === 'none') return;
     var span = btnEl.querySelector('span');
-    btnEl.style.fontSize = '15px';
-    var guard = 20;
-    while (guard-- > 0 && span.scrollWidth > btnEl.clientWidth - 4 && parseFloat(btnEl.style.fontSize) > 6){
+    var h = btnEl.clientHeight;
+    var startSize = Math.max(6, h * 0.60);
+    btnEl.style.fontSize = startSize + 'px';
+    var guard = 24;
+    while (guard-- > 0 && span.scrollWidth > btnEl.clientWidth - 4 && parseFloat(btnEl.style.fontSize) > 5){
       btnEl.style.fontSize = (parseFloat(btnEl.style.fontSize) - 0.5) + 'px';
     }
   }
@@ -508,7 +512,7 @@
 
   function rampVolume(){
     if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
-    var steps = [0.12, 0.22, 0.32, 0.45, 0.55, 0.65];
+    var steps = [0.08, 0.14, 0.20, 0.28, 0.35];
     steps.forEach(function(v, i){
       setTimeout(function(){
         try { spotifyController.setVolume(v); } catch(err){}
@@ -520,7 +524,7 @@
     if (!spotifyController) return;
     try {
       if (typeof spotifyController.setVolume === 'function'){
-        spotifyController.setVolume(0.12);
+        spotifyController.setVolume(0.08);
       }
       spotifyController.play();
       rampVolume();
