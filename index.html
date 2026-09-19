@@ -124,17 +124,35 @@
     display:block;
     pointer-events:none;
   }
-  .face img.as-card{
-    max-width:82%;
-    max-height:82%;
-    width:auto;
+
+  .cardwrap{
+    position:relative;
+    width:100%;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .cardwrap.as-card{
+    width:82%;
     height:auto;
+    aspect-ratio: 1300 / 842;
+    margin:auto;
+  }
+  .cardwrap.as-card img{
+    width:100%;
+    height:100%;
+    object-fit:fill;
     border-radius:6px;
     box-shadow: 0 14px 30px -10px rgba(40,60,55,0.28);
   }
 
   .iban-btn{
     position:absolute;
+    left:15.0%;
+    top:52.2%;
+    width:69.8%;
+    height:7.9%;
     display:none;
     align-items:center;
     justify-content:center;
@@ -254,24 +272,28 @@
   <div class="stage" id="stage" role="button" aria-label="Toca para pasar la página">
     <div class="card" id="card">
       <div class="face front">
-        <img id="imgFront" src="cover.jpg" alt="">
-        <button class="iban-btn" id="ibanFront" type="button" aria-label="Copiar número de cuenta">
-          <span>ES03 0128 7820 8101 0256 1495</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="12" height="12" rx="2"/>
-            <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
-          </svg>
-        </button>
+        <div class="cardwrap" id="cardWrapFront">
+          <img id="imgFront" src="cover.jpg" alt="">
+          <button class="iban-btn" id="ibanFront" type="button" aria-label="Copiar número de cuenta">
+            <span>ES03 0128 7820 8101 0256 1495</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="12" height="12" rx="2"/>
+              <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="face back">
-        <img id="imgBack" src="invite.jpg" alt="">
-        <button class="iban-btn" id="ibanBack" type="button" aria-label="Copiar número de cuenta">
-          <span>ES03 0128 7820 8101 0256 1495</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="12" height="12" rx="2"/>
-            <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
-          </svg>
-        </button>
+        <div class="cardwrap" id="cardWrapBack">
+          <img id="imgBack" src="invite.jpg" alt="">
+          <button class="iban-btn" id="ibanBack" type="button" aria-label="Copiar número de cuenta">
+            <span>ES03 0128 7820 8101 0256 1495</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="12" height="12" rx="2"/>
+              <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -317,6 +339,8 @@
   var stage = document.getElementById('stage');
   var faceFront = document.querySelector('.face.front');
   var faceBack = document.querySelector('.face.back');
+  var cardWrapFront = document.getElementById('cardWrapFront');
+  var cardWrapBack = document.getElementById('cardWrapBack');
   var imgFront = document.getElementById('imgFront');
   var imgBack = document.getElementById('imgBack');
   var ibanFront = document.getElementById('ibanFront');
@@ -332,40 +356,30 @@
 
   // "thanks.jpg" (the account/IBAN page) shows at real card size, floating
   // directly on the textured background instead of inside a white square.
-  function setCardLook(faceEl, imgEl, imageIndex){
+  // The image and its copy-button live in one wrapper sized to the card's
+  // exact proportions, so the button lines up with the blanked-out number
+  // by simple percentages — no per-screen measuring needed.
+  function setCardLook(faceEl, wrapEl, imageIndex){
     var isCard = images[imageIndex] === 'thanks.jpg';
-    imgEl.classList.toggle('as-card', isCard);
+    wrapEl.classList.toggle('as-card', isCard);
     faceEl.classList.toggle('is-card-face', isCard);
   }
 
-  function positionIbanButton(imgEl, btnEl){
-    if (!imgEl.classList.contains('as-card')){
-      btnEl.classList.remove('visible');
-      return;
-    }
-    var rect = imgEl.getBoundingClientRect();
-    var parentRect = imgEl.parentElement.getBoundingClientRect();
-    if (!rect.width){ btnEl.classList.remove('visible'); return; }
-    var left = rect.left - parentRect.left;
-    var top = rect.top - parentRect.top;
-    btnEl.style.left = (left + rect.width * 0.150) + 'px';
-    btnEl.style.top = (top + rect.height * 0.524) + 'px';
-    btnEl.style.width = (rect.width * 0.698) + 'px';
-    btnEl.style.height = (rect.height * 0.076) + 'px';
-    btnEl.style.fontSize = Math.max(8, rect.height * 0.040) + 'px';
-    btnEl.classList.add('visible');
-
-    // Shrink to fit if the IBAN text is still wider than its box.
+  function fitIbanText(btnEl){
+    if (btnEl.style.display === 'none' || getComputedStyle(btnEl).display === 'none') return;
     var span = btnEl.querySelector('span');
-    var guard = 12;
+    btnEl.style.fontSize = '15px';
+    var guard = 20;
     while (guard-- > 0 && span.scrollWidth > btnEl.clientWidth - 4 && parseFloat(btnEl.style.fontSize) > 6){
       btnEl.style.fontSize = (parseFloat(btnEl.style.fontSize) - 0.5) + 'px';
     }
   }
 
-  function positionAllIbanButtons(){
-    positionIbanButton(imgFront, ibanFront);
-    positionIbanButton(imgBack, ibanBack);
+  function refreshIbanButtons(){
+    ibanFront.classList.toggle('visible', cardWrapFront.classList.contains('as-card'));
+    ibanBack.classList.toggle('visible', cardWrapBack.classList.contains('as-card'));
+    fitIbanText(ibanFront);
+    fitIbanText(ibanBack);
   }
 
   function showToast(){
@@ -400,17 +414,15 @@
   ibanFront.addEventListener('click', copyIban);
   ibanBack.addEventListener('click', copyIban);
 
-  window.addEventListener('resize', positionAllIbanButtons);
-  window.addEventListener('orientationchange', function(){ setTimeout(positionAllIbanButtons, 60); });
-  imgFront.addEventListener('load', positionAllIbanButtons);
-  imgBack.addEventListener('load', positionAllIbanButtons);
+  window.addEventListener('resize', refreshIbanButtons);
+  window.addEventListener('orientationchange', function(){ setTimeout(refreshIbanButtons, 60); });
 
-  setCardLook(faceFront, imgFront, idx);
+  setCardLook(faceFront, cardWrapFront, idx);
 
   imgBack.src = images[next(idx)];
-  setCardLook(faceBack, imgBack, next(idx));
+  setCardLook(faceBack, cardWrapBack, next(idx));
 
-  positionAllIbanButtons();
+  refreshIbanButtons();
 
   function setDots(activeIdx){
     dots.forEach(function(d){
@@ -437,14 +449,14 @@
       card.classList.remove('spin');
       imgFront.src = images[idx];
       imgBack.src = images[upcoming];
-      setCardLook(faceFront, imgFront, idx);
-      setCardLook(faceBack, imgBack, upcoming);
+      setCardLook(faceFront, cardWrapFront, idx);
+      setCardLook(faceBack, cardWrapBack, upcoming);
 
       // Force reflow so the browser applies the no-transition jump before we re-enable it.
       void card.offsetWidth;
       card.classList.remove('noanim');
 
-      positionAllIbanButtons();
+      refreshIbanButtons();
       setDots(idx);
       spinning = false;
     });
@@ -472,33 +484,43 @@
     if (Math.abs(dx) > 30) flip();
   }, {passive:true});
 
-  // Start the Spotify track on the first tap/click anywhere on the page
-  // (browsers block audio with sound from starting on its own, so this
-  // rides on the very first interaction — usually the tap that opens the card).
+  // Try to start the song the moment the page is ready; most browsers still
+  // block sound before any tap, so this also arms on the very first
+  // interaction (usually the tap that opens the card) as a fallback.
   var spotifyController = null;
-  var wantsToPlay = true;
+
+  function rampVolume(){
+    if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
+    var steps = [0.12, 0.22, 0.32, 0.45, 0.55, 0.65];
+    steps.forEach(function(v, i){
+      setTimeout(function(){
+        try { spotifyController.setVolume(v); } catch(err){}
+      }, i * 700);
+    });
+  }
+
+  function tryPlay(){
+    if (!spotifyController) return;
+    try {
+      if (typeof spotifyController.setVolume === 'function'){
+        spotifyController.setVolume(0.12);
+      }
+      spotifyController.play();
+      rampVolume();
+    } catch(err){}
+  }
 
   window.onSpotifyIframeApiReady = function(IFrameAPI){
     var element = document.getElementById('spotifyEmbed');
     var options = { uri: 'spotify:track:2mMZ6RsGVCUJwNuJekjlAx' };
     IFrameAPI.createController(element, options, function(EmbedController){
       spotifyController = EmbedController;
-      if (wantsToPlay) {
-        try { spotifyController.play(); } catch(err){}
-      }
+      tryPlay();
     });
   };
 
-  function startMusicOnce(){
-    wantsToPlay = true;
-    if (spotifyController) {
-      try { spotifyController.play(); } catch(err){}
-    }
-    document.removeEventListener('pointerdown', startMusicOnce);
-    document.removeEventListener('touchstart', startMusicOnce);
-  }
-  document.addEventListener('pointerdown', startMusicOnce, {once:true, passive:true});
-  document.addEventListener('touchstart', startMusicOnce, {once:true, passive:true});
+  document.addEventListener('pointerdown', tryPlay, {once:true, passive:true});
+  document.addEventListener('touchstart', tryPlay, {once:true, passive:true});
 })();
 </script>
 </body>
