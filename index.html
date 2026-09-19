@@ -1,0 +1,223 @@
+<title>Miren & Ale</title>
+<style>
+  :root{
+    --bg: #eef2ef;
+    --card-shadow: 0 30px 60px -20px rgba(40,60,55,0.35), 0 8px 20px -8px rgba(40,60,55,0.25);
+    --dot: #c7d3cc;
+    --dot-active: #6c8f83;
+    --hint: #7c8b85;
+  }
+  *{box-sizing:border-box;}
+  body{
+    background: var(--bg);
+    min-height: 100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .screen{
+    width:100%;
+    max-width:520px;
+    min-height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:22px;
+    padding: 28px 20px;
+  }
+
+  .stage{
+    width:100%;
+    max-width:360px;
+    perspective: 1800px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: pan-y;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .card{
+    position:relative;
+    width:100%;
+    aspect-ratio: 1 / 1;
+    transform-style:preserve-3d;
+    transition: transform 0.7s cubic-bezier(.65,.05,.36,1);
+    will-change: transform;
+  }
+  .card.spin{ transform: rotateY(180deg); }
+  .card.noanim{ transition:none !important; }
+
+  .face{
+    position:absolute;
+    inset:0;
+    backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    border-radius: 14px;
+    overflow:hidden;
+    background:#fff;
+    box-shadow: var(--card-shadow);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .face.back{ transform: rotateY(180deg); }
+
+  .face img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    display:block;
+    pointer-events:none;
+  }
+
+  .dots{
+    display:flex;
+    gap:9px;
+    align-items:center;
+  }
+  .dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background: var(--dot);
+    transition: background .35s ease, transform .35s ease;
+  }
+  .dot.active{
+    background: var(--dot-active);
+    transform: scale(1.35);
+  }
+
+  .hint{
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 12.5px;
+    letter-spacing: .04em;
+    color: var(--hint);
+    opacity: .85;
+    text-align:center;
+    transition: opacity .5s ease;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .hint.fade{ opacity: 0; }
+
+  .hint svg{
+    width:13px; height:13px;
+    animation: tapbeat 1.8s ease-in-out infinite;
+  }
+  @keyframes tapbeat{
+    0%,100%{ transform: scale(1); opacity:.9; }
+    50%{ transform: scale(1.18); opacity:1; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ transition-duration: .01ms; }
+    .hint svg{ animation: none; }
+  }
+</style>
+
+<div class="screen">
+  <div class="stage" id="stage" role="button" aria-label="Toca para pasar la página">
+    <div class="card" id="card">
+      <div class="face front">
+        <img id="imgFront" src="cover.jpg" alt="">
+      </div>
+      <div class="face back">
+        <img id="imgBack" src="invite.jpg" alt="">
+      </div>
+    </div>
+  </div>
+
+  <div class="dots" id="dots">
+    <span class="dot active" data-i="0"></span>
+    <span class="dot" data-i="1"></span>
+    <span class="dot" data-i="2"></span>
+  </div>
+
+  <div class="hint" id="hint">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 11.5V6a1.5 1.5 0 0 1 3 0v4"/>
+      <path d="M12 9.8V4.5a1.5 1.5 0 0 1 3 0V10"/>
+      <path d="M15 9.5a1.5 1.5 0 0 1 3 0V13"/>
+      <path d="M6 11V8.5a1.5 1.5 0 0 1 3-.2"/>
+      <path d="M18 13v3a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.6-3.8L4 14.5c-.5-1 .1-2.3 1.4-2.4a1.7 1.7 0 0 1 1.6.9"/>
+    </svg>
+    <span>Toca para pasar la página</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  var images = ["cover.jpg", "invite.jpg", "thanks.jpg"];
+  var idx = 0; // index currently shown on front
+  var spinning = false;
+
+  var card = document.getElementById('card');
+  var stage = document.getElementById('stage');
+  var imgFront = document.getElementById('imgFront');
+  var imgBack = document.getElementById('imgBack');
+  var hint = document.getElementById('hint');
+  var dots = Array.prototype.slice.call(document.querySelectorAll('.dot'));
+
+  function next(idx){ return (idx + 1) % images.length; }
+
+  imgBack.src = images[next(idx)];
+
+  function setDots(activeIdx){
+    dots.forEach(function(d){
+      d.classList.toggle('active', parseInt(d.dataset.i,10) === activeIdx);
+    });
+  }
+
+  function flip(){
+    if (spinning) return;
+    spinning = true;
+    hint.classList.add('fade');
+
+    card.classList.add('spin');
+
+    card.addEventListener('transitionend', function onEnd(e){
+      if (e.propertyName !== 'transform') return;
+      card.removeEventListener('transitionend', onEnd);
+
+      idx = next(idx);
+      var upcoming = next(idx);
+
+      // Snap back to 0deg instantly, with the (now current) image as the front face.
+      card.classList.add('noanim');
+      card.classList.remove('spin');
+      imgFront.src = images[idx];
+      imgBack.src = images[upcoming];
+
+      // Force reflow so the browser applies the no-transition jump before we re-enable it.
+      void card.offsetWidth;
+      card.classList.remove('noanim');
+
+      setDots(idx);
+      spinning = false;
+    });
+  }
+
+  stage.addEventListener('click', flip);
+
+  stage.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      flip();
+    }
+  });
+  stage.setAttribute('tabindex', '0');
+
+  // basic swipe support
+  var touchStartX = null;
+  stage.addEventListener('touchstart', function(e){
+    touchStartX = e.touches[0].clientX;
+  }, {passive:true});
+  stage.addEventListener('touchend', function(e){
+    if (touchStartX === null) return;
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    touchStartX = null;
+    if (Math.abs(dx) > 30) flip();
+  }, {passive:true});
+})();
+</script>
