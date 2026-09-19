@@ -544,23 +544,27 @@
   var wantsPlay = false;
   var playConfirmed = false;
   var fadeRunning = false;
-  var TARGET_VOLUME = 0.22;
+  var TARGET_VOLUME = 0.15;
 
   function fadeIn(){
     if (fadeRunning) return;
     fadeRunning = true;
     if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
-    // Long, very gradual crescendo — starts essentially silent and eases up
-    // in small steps over ~14 seconds, so the song never "jumps in".
-    var steps = [
-      0.004, 0.008, 0.013, 0.018, 0.025, 0.033, 0.043, 0.054,
-      0.067, 0.081, 0.096, 0.112, 0.13, 0.15, 0.17, TARGET_VOLUME
-    ];
-    steps.forEach(function(v, i){
-      setTimeout(function(){
-        try { spotifyController.setVolume(v); } catch(err){}
-      }, i * 900);
-    });
+    // Very long, very gradual crescendo — starts essentially silent and
+    // eases up over about half a minute, curving slowly at first so the
+    // earliest steps are barely perceptible and the song never "jumps in".
+    var STEP_COUNT = 28;
+    var STEP_MS = 1150; // ~32 seconds total
+    for (var i = 0; i <= STEP_COUNT; i++){
+      (function(i){
+        var progress = i / STEP_COUNT;
+        var eased = Math.pow(progress, 2.4); // slow start, gentle finish
+        var v = Math.max(0.003, TARGET_VOLUME * eased);
+        setTimeout(function(){
+          try { spotifyController.setVolume(v); } catch(err){}
+        }, i * STEP_MS);
+      })(i);
+    }
   }
 
   // Call play() first and by itself — on Android especially, the "play"
