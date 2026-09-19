@@ -707,6 +707,26 @@
   ['pointerdown','touchstart','mousedown','keydown','click'].forEach(function(evt){
     document.addEventListener(evt, ensureRunning, {passive:true});
   });
+
+  // Fullscreen also needs a real tap to be granted (like sound), so it's
+  // requested on the very first interaction too. Not every mobile browser
+  // supports it for a plain page (notably iOS Safari doesn't), so this is a
+  // best-effort — the page already fills the whole screen either way.
+  function tryFullscreen(){
+    var el = document.documentElement;
+    var request = el.requestFullscreen || el.webkitRequestFullscreen ||
+                   el.mozRequestFullScreen || el.msRequestFullscreen;
+    var already = document.fullscreenElement || document.webkitFullscreenElement ||
+                   document.mozFullScreenElement || document.msFullscreenElement;
+    if (request && !already){
+      try {
+        var result = request.call(el);
+        if (result && result.catch) result.catch(function(){});
+      } catch(err){}
+    }
+  }
+  document.addEventListener('pointerdown', tryFullscreen, {once:true, passive:true});
+  document.addEventListener('touchstart', tryFullscreen, {once:true, passive:true});
 })();
 </script>
 </body>
