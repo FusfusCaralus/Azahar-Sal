@@ -117,7 +117,7 @@
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     will-change: transform;
-    border-radius: 14px;
+    border-radius: 22px;
     overflow:visible;
     background:#fff;
     box-shadow: var(--card-shadow);
@@ -140,6 +140,7 @@
     object-fit:contain;
     display:block;
     pointer-events:none;
+    border-radius:20px;
   }
 
   .cardwrap{
@@ -147,56 +148,71 @@
     width:100%;
     height:100%;
     display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+  }
+  .cardwrap.as-card{
+    gap:16px;
+  }
+  .cardpic{
+    position:relative;
+    width:100%;
+    height:100%;
+    display:flex;
     align-items:center;
     justify-content:center;
   }
-  .cardwrap.as-card{
+  .cardwrap.as-card .cardpic{
     width:82%;
     height:auto;
-    aspect-ratio: 1300 / 842;
-    margin:auto;
   }
-  .cardwrap.as-card img{
+  .cardwrap.as-card .cardpic img{
     width:100%;
-    height:100%;
-    object-fit:fill;
-    border-radius:6px;
+    height:auto;
+    display:block;
+    border-radius:9px;
     box-shadow: 0 14px 30px -10px rgba(40,60,55,0.28);
   }
 
-  .iban-btn{
-    position:absolute;
-    left:15.0%;
-    top:52.2%;
-    width:69.8%;
-    height:7.9%;
+  .copy-pill{
     display:none;
     align-items:center;
     justify-content:center;
-    gap:0.5em;
-    border:none;
-    background:transparent;
-    padding:0;
-    margin:0;
+    gap:8px;
+    border:1px solid rgba(76,122,99,0.35);
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(2px);
+    color: var(--iban-green, #4c7a63);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size:12.5px;
+    font-weight:600;
+    letter-spacing:0.03em;
+    padding:8px 16px;
+    border-radius:999px;
+    box-shadow: 0 6px 16px -8px rgba(40,60,55,0.25);
     cursor:pointer;
     -webkit-tap-highlight-color: transparent;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-weight:600;
-    line-height:1;
-    letter-spacing:0.09em;
-    color: var(--iban-green, #4c7a63);
-    white-space:nowrap;
-    overflow:hidden;
     transition: transform .15s ease, opacity .15s ease;
-  }
-  .iban-btn.visible{ display:flex; }
-  .iban-btn:active{ transform: scale(0.96); opacity:0.75; }
-  .iban-btn svg{
-    width:0.85em;
-    height:0.85em;
     flex:0 0 auto;
-    opacity:0.8;
   }
+  .copy-pill.visible{ display:inline-flex; }
+  .copy-pill:active{ transform: scale(0.96); opacity:0.8; }
+  .copy-pill svg{
+    width:14px;
+    height:14px;
+    flex:0 0 auto;
+    opacity:0.85;
+  }
+
+  .loc-link{
+    position:absolute;
+    display:none;
+  }
+  .loc-link.visible{ display:block; }
+  .loc-chapel{ left:2.5%; top:39%; width:34%; height:12.5%; }
+  .loc-salinas{ left:69%; top:41%; width:23.5%; height:8%; }
 
   .toast{
     position:fixed;
@@ -292,25 +308,33 @@
     <div class="card" id="card">
       <div class="face front">
         <div class="cardwrap" id="cardWrapFront">
-          <img id="imgFront" src="cover.jpg" alt="">
-          <button class="iban-btn" id="ibanFront" type="button" aria-label="Copiar número de cuenta">
-            <span>ES03 0128 7820 8101 0256 1495</span>
+          <div class="cardpic">
+            <img id="imgFront" src="cover.jpg" alt="">
+            <a class="loc-link loc-chapel" id="locChapelFront" href="https://maps.app.goo.gl/wj9HGo2seYMrKwc48" target="_blank" rel="noopener" aria-label="Abrir la ubicación de la capilla en Google Maps"></a>
+            <a class="loc-link loc-salinas" id="locSalinasFront" href="https://maps.app.goo.gl/kWef3HdCM3FfZwBd9" target="_blank" rel="noopener" aria-label="Abrir la ubicación de Salinas San Vicente en Google Maps"></a>
+          </div>
+          <button class="copy-pill" id="copyFront" type="button" aria-label="Copiar número de cuenta">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="12" height="12" rx="2"/>
               <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
             </svg>
+            <span>Copiar número de cuenta</span>
           </button>
         </div>
       </div>
       <div class="face back">
         <div class="cardwrap" id="cardWrapBack">
-          <img id="imgBack" src="invite.jpg" alt="">
-          <button class="iban-btn" id="ibanBack" type="button" aria-label="Copiar número de cuenta">
-            <span>ES03 0128 7820 8101 0256 1495</span>
+          <div class="cardpic">
+            <img id="imgBack" src="invite.jpg" alt="">
+            <a class="loc-link loc-chapel" id="locChapelBack" href="https://maps.app.goo.gl/wj9HGo2seYMrKwc48" target="_blank" rel="noopener" aria-label="Abrir la ubicación de la capilla en Google Maps"></a>
+            <a class="loc-link loc-salinas" id="locSalinasBack" href="https://maps.app.goo.gl/kWef3HdCM3FfZwBd9" target="_blank" rel="noopener" aria-label="Abrir la ubicación de Salinas San Vicente en Google Maps"></a>
+          </div>
+          <button class="copy-pill" id="copyBack" type="button" aria-label="Copiar número de cuenta">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="9" y="9" width="12" height="12" rx="2"/>
               <path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>
             </svg>
+            <span>Copiar número de cuenta</span>
           </button>
         </div>
       </div>
@@ -362,45 +386,35 @@
   var cardWrapBack = document.getElementById('cardWrapBack');
   var imgFront = document.getElementById('imgFront');
   var imgBack = document.getElementById('imgBack');
-  var ibanFront = document.getElementById('ibanFront');
-  var ibanBack = document.getElementById('ibanBack');
+  var copyFront = document.getElementById('copyFront');
+  var copyBack = document.getElementById('copyBack');
+  var locChapelFront = document.getElementById('locChapelFront');
+  var locSalinasFront = document.getElementById('locSalinasFront');
+  var locChapelBack = document.getElementById('locChapelBack');
+  var locSalinasBack = document.getElementById('locSalinasBack');
   var toast = document.getElementById('toast');
   var hint = document.getElementById('hint');
   var dots = Array.prototype.slice.call(document.querySelectorAll('.dot'));
 
-  var IBAN_TEXT = "ES03 0128 7820 8101 0256 1495";
   var IBAN_RAW = "ES0301287820810102561495";
 
   function next(idx){ return (idx + 1) % images.length; }
 
   // "thanks.jpg" (the account/IBAN page) shows at real card size, floating
-  // directly on the textured background instead of inside a white square.
-  // The image and its copy-button live in one wrapper sized to the card's
-  // exact proportions, so the button lines up with the blanked-out number
-  // by simple percentages — no per-screen measuring needed.
+  // directly on the textured background instead of inside a white square,
+  // with a plain copy button underneath — the card artwork itself is never
+  // touched. "invite.jpg" gets two invisible tap zones over the ceremony
+  // and reception lines, linking out to Google Maps.
   function setCardLook(faceEl, wrapEl, imageIndex){
     var isCard = images[imageIndex] === 'thanks.jpg';
+    var isInvite = images[imageIndex] === 'invite.jpg';
     wrapEl.classList.toggle('as-card', isCard);
     faceEl.classList.toggle('is-card-face', isCard);
-  }
-
-  function fitIbanText(btnEl){
-    if (getComputedStyle(btnEl).display === 'none') return;
-    var span = btnEl.querySelector('span');
-    var h = btnEl.clientHeight;
-    var startSize = Math.max(6, h * 0.60);
-    btnEl.style.fontSize = startSize + 'px';
-    var guard = 24;
-    while (guard-- > 0 && span.scrollWidth > btnEl.clientWidth - 4 && parseFloat(btnEl.style.fontSize) > 5){
-      btnEl.style.fontSize = (parseFloat(btnEl.style.fontSize) - 0.5) + 'px';
+    wrapEl.querySelector('.copy-pill').classList.toggle('visible', isCard);
+    var links = wrapEl.querySelectorAll('.loc-link');
+    for (var i = 0; i < links.length; i++){
+      links[i].classList.toggle('visible', isInvite);
     }
-  }
-
-  function refreshIbanButtons(){
-    ibanFront.classList.toggle('visible', cardWrapFront.classList.contains('as-card'));
-    ibanBack.classList.toggle('visible', cardWrapBack.classList.contains('as-card'));
-    fitIbanText(ibanFront);
-    fitIbanText(ibanBack);
   }
 
   function showToast(){
@@ -432,18 +446,17 @@
     }
   }
 
-  ibanFront.addEventListener('click', copyIban);
-  ibanBack.addEventListener('click', copyIban);
+  copyFront.addEventListener('click', copyIban);
+  copyBack.addEventListener('click', copyIban);
 
-  window.addEventListener('resize', refreshIbanButtons);
-  window.addEventListener('orientationchange', function(){ setTimeout(refreshIbanButtons, 60); });
+  [locChapelFront, locSalinasFront, locChapelBack, locSalinasBack].forEach(function(a){
+    a.addEventListener('click', function(e){ e.stopPropagation(); });
+  });
 
   setCardLook(faceFront, cardWrapFront, idx);
 
   imgBack.src = images[next(idx)];
   setCardLook(faceBack, cardWrapBack, next(idx));
-
-  refreshIbanButtons();
 
   function setDots(activeIdx){
     dots.forEach(function(d){
@@ -477,7 +490,6 @@
       void card.offsetWidth;
       card.classList.remove('noanim');
 
-      refreshIbanButtons();
       setDots(idx);
       spinning = false;
     });
