@@ -55,10 +55,10 @@
     inset:0;
     z-index:0;
     pointer-events:none;
-    opacity:0.34;
+    opacity:0.38;
     mix-blend-mode:multiply;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='46' height='46'><g fill='none' stroke='%237f9a8c' stroke-width='0.85' stroke-linecap='round' opacity='0.55'><path d='M-4 9 Q 4 3 12 9 T 28 9 T 44 9 T 60 9'/><path d='M-4 32 Q 4 26 12 32 T 28 32 T 44 32 T 60 32'/></g><g fill='%237f9a8c' opacity='0.44'><ellipse cx='7' cy='24' rx='4.3' ry='1.7' transform='rotate(-30 7 24)'/></g><g stroke='%236c8f83' stroke-width='0.4' opacity='0.5'><path d='M4.3 25.1 L9.7 22.9'/></g><g fill='%239487a8' opacity='0.42'><ellipse cx='32' cy='4' rx='3.9' ry='1.5' transform='rotate(38 32 4)'/></g><g stroke='%238678a0' stroke-width='0.4' opacity='0.46'><path d='M29.8 5.9 L34.2 2.1'/></g><g fill='%237f9a8c' opacity='0.38'><ellipse cx='38' cy='27' rx='3.6' ry='1.4' transform='rotate(-15 38 27)'/></g><g stroke='%236c8f83' stroke-width='0.4' opacity='0.42'><path d='M35.8 28 L40.2 26'/></g><g fill='%239487a8' opacity='0.36'><ellipse cx='19' cy='17' rx='3.4' ry='1.3' transform='rotate(60 19 17)'/></g><g stroke='%238678a0' stroke-width='0.4' opacity='0.4'><path d='M17.5 14.3 L20.5 19.7'/></g><g fill='%237f9a8c' opacity='0.34'><ellipse cx='27' cy='39' rx='3.1' ry='1.2' transform='rotate(-42 27 39)'/></g><g stroke='%236c8f83' stroke-width='0.35' opacity='0.38'><path d='M25.1 40.9 L28.9 37.1'/></g><g fill='%239487a8' opacity='0.34'><ellipse cx='0' cy='40' rx='3' ry='1.1' transform='rotate(20 0 40)'/></g><g fill='%237f9a8c' opacity='0.3'><ellipse cx='45' cy='18' rx='2.8' ry='1.1' transform='rotate(-50 45 18)'/></g></svg>");
-    background-size:46px 46px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='30'><g fill='none' stroke='%237f9a8c' stroke-width='0.8' stroke-linecap='round' opacity='0.5'><path d='M-3 6 Q 2 2 7 6 T 17 6 T 27 6 T 37 6'/><path d='M-3 21 Q 2 17 7 21 T 17 21 T 27 21 T 37 21'/></g><g fill='%237f9a8c' opacity='0.42'><ellipse cx='5' cy='16' rx='3.2' ry='1.25' transform='rotate(-30 5 16)'/></g><g stroke='%236c8f83' stroke-width='0.35' opacity='0.48'><path d='M3 16.8 L7 15.2'/></g><g fill='%239487a8' opacity='0.4'><ellipse cx='21' cy='2' rx='2.9' ry='1.1' transform='rotate(38 21 2)'/></g><g stroke='%238678a0' stroke-width='0.35' opacity='0.44'><path d='M19.4 3.2 L22.6 0.8'/></g><g fill='%237f9a8c' opacity='0.36'><ellipse cx='25' cy='18' rx='2.7' ry='1.05' transform='rotate(-15 25 18)'/></g><g stroke='%236c8f83' stroke-width='0.35' opacity='0.4'><path d='M23.4 18.7 L26.6 17.3'/></g><g fill='%239487a8' opacity='0.34'><ellipse cx='12' cy='11' rx='2.5' ry='1' transform='rotate(60 12 11)'/></g><g stroke='%238678a0' stroke-width='0.35' opacity='0.38'><path d='M10.9 9.2 L13.1 12.8'/></g><g fill='%237f9a8c' opacity='0.32'><ellipse cx='18' cy='26' rx='2.3' ry='0.9' transform='rotate(-42 18 26)'/></g><g stroke='%236c8f83' stroke-width='0.3' opacity='0.36'><path d='M16.6 27.2 L19.4 24.8'/></g><g fill='%239487a8' opacity='0.32'><ellipse cx='0' cy='27' rx='2.2' ry='0.85' transform='rotate(20 0 27)'/></g><g fill='%237f9a8c' opacity='0.28'><ellipse cx='29' cy='12' rx='2' ry='0.8' transform='rotate(-50 29 12)'/></g><g fill='%238678a0' opacity='0.3'><ellipse cx='9' cy='24' rx='1.9' ry='0.75' transform='rotate(10 9 24)'/></g><g fill='%236c8f83' opacity='0.3'><ellipse cx='27' cy='27' rx='1.8' ry='0.7' transform='rotate(-25 27 27)'/></g></svg>");
+    background-size:30px 30px;
   }
   .screen{
     width:100%;
@@ -117,7 +117,7 @@
     -webkit-transform: translateZ(0);
     transform: translateZ(0);
     will-change: transform;
-    border-radius: 22px;
+    border-radius: 16px;
     overflow:visible;
     background:#fff;
     box-shadow: var(--card-shadow);
@@ -140,7 +140,7 @@
     object-fit:contain;
     display:block;
     pointer-events:none;
-    border-radius:20px;
+    border-radius:13px;
   }
 
   .cardwrap{
@@ -172,7 +172,7 @@
     width:100%;
     height:auto;
     display:block;
-    border-radius:9px;
+    border-radius:6px;
     box-shadow: 0 14px 30px -10px rgba(40,60,55,0.28);
   }
 
@@ -517,29 +517,20 @@
     if (Math.abs(dx) > 30) flip();
   }, {passive:true});
 
-  // Try to start the song the moment the page is ready; most browsers still
-  // block sound before any tap, so this also arms on the very first
-  // interaction (usually the tap that opens the card) as a fallback.
+  // Start the song the moment the page is ready, quiet and steady (no
+  // volume ramp). Most browsers still block sound before any tap, so this
+  // also arms on the very first interaction anywhere on the page as a
+  // fallback in case the eager attempt was blocked.
   var spotifyController = null;
-
-  function rampVolume(){
-    if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
-    var steps = [0.08, 0.14, 0.20, 0.28, 0.35];
-    steps.forEach(function(v, i){
-      setTimeout(function(){
-        try { spotifyController.setVolume(v); } catch(err){}
-      }, i * 700);
-    });
-  }
+  var QUIET_VOLUME = 0.13;
 
   function tryPlay(){
     if (!spotifyController) return;
     try {
       if (typeof spotifyController.setVolume === 'function'){
-        spotifyController.setVolume(0.08);
+        spotifyController.setVolume(QUIET_VOLUME);
       }
       spotifyController.play();
-      rampVolume();
     } catch(err){}
   }
 
