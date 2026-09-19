@@ -544,22 +544,22 @@
   var wantsPlay = false;
   var playConfirmed = false;
   var fadeRunning = false;
-  var TARGET_VOLUME = 0.15;
+  var TARGET_VOLUME = 0.09;
 
   function fadeIn(){
     if (fadeRunning) return;
     fadeRunning = true;
     if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
     // Very long, very gradual crescendo — starts essentially silent and
-    // eases up over about half a minute, curving slowly at first so the
+    // eases up over about 45 seconds, curving slowly at first so the
     // earliest steps are barely perceptible and the song never "jumps in".
-    var STEP_COUNT = 28;
-    var STEP_MS = 1150; // ~32 seconds total
+    var STEP_COUNT = 38;
+    var STEP_MS = 1180; // ~45 seconds total
     for (var i = 0; i <= STEP_COUNT; i++){
       (function(i){
         var progress = i / STEP_COUNT;
-        var eased = Math.pow(progress, 2.4); // slow start, gentle finish
-        var v = Math.max(0.003, TARGET_VOLUME * eased);
+        var eased = Math.pow(progress, 3); // very slow start, gentle finish
+        var v = Math.max(0.002, TARGET_VOLUME * eased);
         setTimeout(function(){
           try { spotifyController.setVolume(v); } catch(err){}
         }, i * STEP_MS);
@@ -567,16 +567,17 @@
     }
   }
 
-  // Call play() first and by itself — on Android especially, the "play"
-  // command reaching the embed relies on a fragile, short-lived window of
-  // user-activation carried over from the tap. Sending other commands
-  // (volume, seek) before it risks using up that window first.
+  // Set the volume to near-silent FIRST and let that message land before
+  // telling it to play — otherwise there's a brief race where audio can
+  // start at whatever volume the embed had before ours takes effect, which
+  // is exactly the "jump scare" moment. The very short delay before play()
+  // is still comfortably inside the window Android keeps the tap's
+  // activation alive for.
   function sendPlay(){
     if (!spotifyController) return;
-    try { spotifyController.play(); } catch(err){}
     try {
       if (typeof spotifyController.setVolume === 'function'){
-        spotifyController.setVolume(0.004);
+        spotifyController.setVolume(0.002);
       }
     } catch(err){}
     try {
@@ -584,6 +585,9 @@
         spotifyController.seek(0);
       }
     } catch(err){}
+    setTimeout(function(){
+      try { spotifyController.play(); } catch(err){}
+    }, 90);
   }
 
   function tryPlay(){
