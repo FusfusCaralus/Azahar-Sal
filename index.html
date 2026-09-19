@@ -532,7 +532,7 @@
     var buffer = makeNoiseBuffer(ctx, 6);
 
     var waveGain = ctx.createGain();
-    waveGain.gain.value = 0.16;
+    waveGain.gain.value = 0.1;
     waveGain.connect(destination);
 
     var wash = ctx.createBufferSource();
@@ -540,16 +540,16 @@
     wash.loop = true;
     var washFilter = ctx.createBiquadFilter();
     washFilter.type = 'bandpass';
-    washFilter.frequency.value = 900;
+    washFilter.frequency.value = 850;
     washFilter.Q.value = 0.6;
     wash.connect(washFilter);
     washFilter.connect(waveGain);
 
-    // One slow, gentle swell — simple in-and-out breathing, nothing more.
+    // One very slow, soothing swell — a gentle breathing motion, not a pulse.
     var lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.05;
+    lfo.frequency.value = 0.035;
     var lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.06;
+    lfoGain.gain.value = 0.035;
     lfo.connect(lfoGain);
     lfoGain.connect(waveGain.gain);
 
@@ -611,7 +611,7 @@
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.0001;
       masterGain.connect(audioCtx.destination);
-      masterGain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 2.5);
+      masterGain.gain.linearRampToValueAtTime(0.38, audioCtx.currentTime + 3);
 
       buildWaves(audioCtx, masterGain);
       scheduleBirds(audioCtx, masterGain);
