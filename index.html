@@ -542,14 +542,20 @@
   // the page, which is normally the same tap that opens the invitation.
   var spotifyController = null;
   var wantsPlay = false;
-  var playStarted = false;
-  var TARGET_VOLUME = 0.3;
+  var playConfirmed = false;
+  var fadeRunning = false;
+  var TARGET_VOLUME = 0.22;
 
   function fadeIn(){
+    if (fadeRunning) return;
+    fadeRunning = true;
     if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
-    // Very gradual crescendo: near-silent at first, easing up to a soft but
-    // audible level over about 9 seconds, in small steps.
-    var steps = [0.008, 0.02, 0.04, 0.07, 0.1, 0.14, 0.19, 0.25, 0.31, TARGET_VOLUME];
+    // Long, very gradual crescendo — starts essentially silent and eases up
+    // in small steps over ~14 seconds, so the song never "jumps in".
+    var steps = [
+      0.004, 0.008, 0.013, 0.018, 0.025, 0.033, 0.043, 0.054,
+      0.067, 0.081, 0.096, 0.112, 0.13, 0.15, 0.17, TARGET_VOLUME
+    ];
     steps.forEach(function(v, i){
       setTimeout(function(){
         try { spotifyController.setVolume(v); } catch(err){}
@@ -557,37 +563,43 @@
     });
   }
 
-  function tryPlay(){
-    wantsPlay = true;
-    if (!spotifyController || playStarted) return;
-    playStarted = true;
-
-    // Each step gets its own try/catch: if one of these calls isn't
-    // supported and throws, it must never stop the others — play() above
-    // all has to run regardless.
+  // Call play() first and by itself — on Android especially, the "play"
+  // command reaching the embed relies on a fragile, short-lived window of
+  // user-activation carried over from the tap. Sending other commands
+  // (volume, seek) before it risks using up that window first.
+  function sendPlay(){
+    if (!spotifyController) return;
+    try { spotifyController.play(); } catch(err){}
     try {
       if (typeof spotifyController.setVolume === 'function'){
-        spotifyController.setVolume(0.008);
+        spotifyController.setVolume(0.004);
       }
     } catch(err){}
-
     try {
       if (typeof spotifyController.seek === 'function'){
         spotifyController.seek(0);
       }
     } catch(err){}
+  }
 
-    try {
-      spotifyController.play();
-    } catch(err){
-      // Retry once shortly after — some browsers need the controller to
-      // finish initializing before play() is accepted.
-      setTimeout(function(){
-        try { spotifyController.play(); } catch(err2){}
-      }, 300);
-    }
-
-    fadeIn();
+  function tryPlay(){
+    wantsPlay = true;
+    if (playConfirmed) return;
+    if (!spotifyController) return;
+    sendPlay();
+    // If we don't get confirmation that it's actually playing soon after,
+    // try again — some Android browsers (especially in-app WebViews like
+    // WhatsApp's) need more than one attempt.
+    setTimeout(function(){
+      if (!playConfirmed && spotifyController){
+        sendPlay();
+      }
+    }, 700);
+    // Fallback in case "playback_update" isn't supported in this browser:
+    // start the fade-in blindly a couple of seconds after the first
+    // attempt, rather than staying silent forever waiting for a confirmation
+    // that may never arrive.
+    setTimeout(fadeIn, 2000);
   }
 
   window.onSpotifyIframeApiReady = function(IFrameAPI){
@@ -595,12 +607,24 @@
     var options = { uri: 'spotify:track:1uLGk9TIBqIueLOyqgH3Hj' };
     IFrameAPI.createController(element, options, function(EmbedController){
       spotifyController = EmbedController;
+      if (typeof EmbedController.addListener === 'function'){
+        EmbedController.addListener('playback_update', function(e){
+          if (e && e.data && e.data.isPaused === false && !playConfirmed){
+            playConfirmed = true;
+            fadeIn();
+          }
+        });
+      }
       if (wantsPlay) tryPlay();
     });
   };
 
-  document.addEventListener('pointerdown', tryPlay, {once:true, passive:true});
-  document.addEventListener('touchstart', tryPlay, {once:true, passive:true});
+  // Keep trying on every tap/click until playback is actually confirmed —
+  // a single missed attempt (common on Android) shouldn't mean silence for
+  // the whole visit.
+  ['pointerdown', 'touchstart', 'click'].forEach(function(evt){
+    document.addEventListener(evt, tryPlay, {passive:true});
+  });
 
   // Fullscreen also needs a real tap to be granted (like sound), so it's
   // requested on the very first interaction too. Not every mobile browser
