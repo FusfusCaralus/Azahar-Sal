@@ -42,9 +42,10 @@
 
   .stage{
     width:100%;
-    max-width:min(97vw, 720px);
+    max-width: var(--stagemax, min(97vw, 720px));
     max-height:76vh;
     max-height:76dvh;
+    transition: max-width 0.7s cubic-bezier(.65,.05,.36,1);
     flex: 1 1 auto;
     perspective: 1800px;
     -webkit-tap-highlight-color: transparent;
@@ -194,6 +195,15 @@
     }
   }
 
+  // "thanks.jpg" (the account/IBAN page) shows at real card size; the other
+  // two pages fill as much of the screen as possible.
+  function setStageSizeFor(imageIndex){
+    var isCardPage = images[imageIndex] === 'thanks.jpg';
+    stage.style.setProperty('--stagemax', isCardPage ? 'min(80vw, 420px)' : 'min(97vw, 720px)');
+  }
+
+  setStageSizeFor(idx);
+
   if (imgFront.complete) setAspectFromImg(imgFront);
   imgFront.addEventListener('load', function(){ setAspectFromImg(imgFront); });
 
@@ -225,6 +235,7 @@
       imgFront.src = images[idx];
       imgBack.src = images[upcoming];
       setAspectFromImg(imgFront);
+      setStageSizeFor(idx);
       if (!imgFront.complete) {
         imgFront.addEventListener('load', function onLoad(){
           imgFront.removeEventListener('load', onLoad);
