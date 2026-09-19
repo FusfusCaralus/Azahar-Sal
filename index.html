@@ -284,6 +284,23 @@
     .card{ transition-duration: .01ms; }
     .hint svg{ animation: none; }
   }
+
+  .music{
+    position:fixed;
+    left:-9999px;
+    top:-9999px;
+    width:1px;
+    height:1px;
+    overflow:hidden;
+    opacity:0;
+    pointer-events:none;
+  }
+  .music iframe{
+    display:block;
+    width:1px;
+    height:1px;
+    border:0;
+  }
 </style>
 </head>
 <body>
@@ -344,7 +361,18 @@
     </svg>
     <span>Toca para pasar la página</span>
   </div>
+
+  <div class="music" id="music">
+    <iframe id="spotifyEmbed"
+      src="https://open.spotify.com/embed/track/1uLGk9TIBqIueLOyqgH3Hj?utm_source=generator&theme=0"
+      height="80"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      loading="lazy"
+      title="Canción de la boda"></iframe>
+  </div>
 </div>
+
+<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 
 <script>
 (function(){
@@ -505,133 +533,36 @@
     if (Math.abs(dx) > 30) flip(dx < 0 ? 'next' : 'prev');
   }, {passive:true});
 
-  // Ambient sound: soft sea waves + a simple, gentle birdsong melody,
-  // synthesized entirely in-browser (Web Audio API), starting on the very
-  // first tap — browsers don't allow sound before that anyway, so this
-  // keeps it simple and only starts it there, nothing before.
-  var audioCtx = null;
-  var masterGain = null;
-  var ambientStarted = false;
+  // Song: plays through a fully hidden Spotify embed (1x1px, off-screen,
+  // zero-opacity — nothing of it is ever visible). Browsers block sound
+  // before any tap, so it starts on the very first interaction anywhere on
+  // the page, which is normally the same tap that opens the invitation.
+  var spotifyController = null;
+  var wantsPlay = false;
+  var VOLUME = 0.6;
 
-  function makeNoiseBuffer(ctx, seconds){
-    var bufferSize = seconds * ctx.sampleRate;
-    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    var data = buffer.getChannelData(0);
-    var lastOut = 0;
-    for (var i = 0; i < bufferSize; i++){
-      var white = Math.random() * 2 - 1;
-      lastOut = (lastOut + 0.02 * white) / 1.02;
-      data[i] = lastOut * 3.2;
-    }
-    return buffer;
-  }
-
-  // One single soft layer for the sea — a gentle wash with a slow, simple
-  // swell. No separate rumble/foam layers, no crashes: just a calm shore.
-  function buildWaves(ctx, destination){
-    var buffer = makeNoiseBuffer(ctx, 6);
-
-    var waveGain = ctx.createGain();
-    waveGain.gain.value = 0.1;
-    waveGain.connect(destination);
-
-    var wash = ctx.createBufferSource();
-    wash.buffer = buffer;
-    wash.loop = true;
-    var washFilter = ctx.createBiquadFilter();
-    washFilter.type = 'bandpass';
-    washFilter.frequency.value = 850;
-    washFilter.Q.value = 0.6;
-    wash.connect(washFilter);
-    washFilter.connect(waveGain);
-
-    // One very slow, soothing swell — a gentle breathing motion, not a pulse.
-    var lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.035;
-    var lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.035;
-    lfo.connect(lfoGain);
-    lfoGain.connect(waveGain.gain);
-
-    wash.start();
-    lfo.start();
-  }
-
-  // A simple, melodic little bird call — a short 2–3 note phrase that steps
-  // down pleasantly, like a real bird's tune, instead of noisy chirping.
-  function scheduleBirds(ctx, destination){
-    function playCall(baseFreq, peakGain){
-      var now = ctx.currentTime;
-      // A short, pleasant melodic shape: up a little, then down — like a
-      // simple whistled phrase, with small randomization so it's never
-      // identical twice.
-      var steps = [1, 1.12 + Math.random() * 0.06, 0.82 + Math.random() * 0.05];
-      var noteLen = 0.14;
-      for (var i = 0; i < steps.length; i++){
-        var t = now + i * noteLen;
-        var freq = baseFreq * steps[i];
-
-        var osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, t);
-        osc.frequency.exponentialRampToValueAtTime(freq * 0.94, t + noteLen * 0.8);
-
-        var g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, t);
-        g.gain.exponentialRampToValueAtTime(peakGain, t + 0.02);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + noteLen * 0.9);
-
-        osc.connect(g);
-        g.connect(destination);
-        osc.start(t);
-        osc.stop(t + noteLen);
-      }
-    }
-
-    function makeVoice(baseFreq, peakGain, minGap, maxGap, startDelay){
-      function loop(){
-        playCall(baseFreq * (0.97 + Math.random() * 0.06), peakGain);
-        var delay = minGap + Math.random() * (maxGap - minGap);
-        setTimeout(loop, delay);
-      }
-      setTimeout(loop, startDelay);
-    }
-
-    // Two simple voices, different pitch and pace, gentle and unhurried.
-    makeVoice(2600, 0.045, 3200, 6000, 1200);
-    makeVoice(1900, 0.035, 4200, 7800, 3400);
-  }
-
-  function startAmbient(){
-    if (ambientStarted) return;
-    ambientStarted = true;
+  function tryPlay(){
+    wantsPlay = true;
+    if (!spotifyController) return;
     try {
-      var Ctx = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new Ctx();
-      masterGain = audioCtx.createGain();
-      masterGain.gain.value = 0.0001;
-      masterGain.connect(audioCtx.destination);
-      masterGain.gain.linearRampToValueAtTime(0.38, audioCtx.currentTime + 3);
-
-      buildWaves(audioCtx, masterGain);
-      scheduleBirds(audioCtx, masterGain);
-    } catch(err){
-      ambientStarted = false;
-    }
+      if (typeof spotifyController.setVolume === 'function'){
+        spotifyController.setVolume(VOLUME);
+      }
+      spotifyController.play();
+    } catch(err){}
   }
 
-  function ensureRunning(){
-    if (!ambientStarted){
-      startAmbient();
-    } else if (audioCtx && audioCtx.state === 'suspended'){
-      audioCtx.resume().catch(function(){});
-    }
-  }
+  window.onSpotifyIframeApiReady = function(IFrameAPI){
+    var element = document.getElementById('spotifyEmbed');
+    var options = { uri: 'spotify:track:1uLGk9TIBqIueLOyqgH3Hj' };
+    IFrameAPI.createController(element, options, function(EmbedController){
+      spotifyController = EmbedController;
+      if (wantsPlay) tryPlay();
+    });
+  };
 
-  // Starts on the very first tap/click anywhere on the page — nothing plays
-  // before that, by design.
-  document.addEventListener('pointerdown', ensureRunning, {once:true, passive:true});
-  document.addEventListener('touchstart', ensureRunning, {once:true, passive:true});
+  document.addEventListener('pointerdown', tryPlay, {once:true, passive:true});
+  document.addEventListener('touchstart', tryPlay, {once:true, passive:true});
 
   // Fullscreen also needs a real tap to be granted (like sound), so it's
   // requested on the very first interaction too. Not every mobile browser
