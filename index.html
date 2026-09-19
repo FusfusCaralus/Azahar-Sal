@@ -226,17 +226,19 @@
   }
 
   .music{
-    width:100%;
-    max-width:min(92vw, 420px);
-    flex:0 0 auto;
-    border-radius:14px;
+    position:fixed;
+    left:-9999px;
+    top:-9999px;
+    width:1px;
+    height:1px;
     overflow:hidden;
-    box-shadow: 0 10px 26px -12px rgba(40,60,55,0.35);
-    opacity:0.96;
+    opacity:0;
+    pointer-events:none;
   }
   .music iframe{
     display:block;
-    width:100%;
+    width:1px;
+    height:1px;
     border:0;
   }
 
