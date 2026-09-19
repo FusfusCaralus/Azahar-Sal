@@ -14,6 +14,9 @@
 <meta name="twitter:title" content="Boda de Azahar & Sal">
 <meta name="twitter:description" content="Miren & Ale — 3 de octubre de 2026, Isla de León.">
 <meta name="twitter:image" content="https://fusfuscaralus.github.io/Azahar-Sal/cover.jpg">
+<link rel="preconnect" href="https://open.spotify.com">
+<link rel="preconnect" href="https://i.scdn.co">
+<link rel="dns-prefetch" href="https://open.spotify.com">
 <style>
   :root{
     --bg: #eef2ef;
@@ -539,16 +542,32 @@
   // the page, which is normally the same tap that opens the invitation.
   var spotifyController = null;
   var wantsPlay = false;
-  var VOLUME = 0.6;
+  var playStarted = false;
+  var TARGET_VOLUME = 0.42;
+
+  function fadeIn(){
+    if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
+    // Very gradual crescendo: near-silent at first, easing up to a soft but
+    // audible level over about 9 seconds, in small steps.
+    var steps = [0.008, 0.02, 0.04, 0.07, 0.1, 0.14, 0.19, 0.25, 0.31, TARGET_VOLUME];
+    steps.forEach(function(v, i){
+      setTimeout(function(){
+        try { spotifyController.setVolume(v); } catch(err){}
+      }, i * 900);
+    });
+  }
 
   function tryPlay(){
     wantsPlay = true;
-    if (!spotifyController) return;
+    if (!spotifyController || playStarted) return;
+    playStarted = true;
     try {
-      if (typeof spotifyController.setVolume === 'function'){
-        spotifyController.setVolume(VOLUME);
+      spotifyController.setVolume(0.008);
+      if (typeof spotifyController.seek === 'function'){
+        spotifyController.seek(0);
       }
       spotifyController.play();
+      fadeIn();
     } catch(err){}
   }
 
