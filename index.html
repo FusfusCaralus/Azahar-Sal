@@ -280,23 +280,6 @@
     50%{ transform: scale(1.18); opacity:1; }
   }
 
-  .music{
-    position:fixed;
-    left:-9999px;
-    top:-9999px;
-    width:1px;
-    height:1px;
-    overflow:hidden;
-    opacity:0;
-    pointer-events:none;
-  }
-  .music iframe{
-    display:block;
-    width:1px;
-    height:1px;
-    border:0;
-  }
-
   @media (prefers-reduced-motion: reduce){
     .card{ transition-duration: .01ms; }
     .hint svg{ animation: none; }
@@ -361,18 +344,7 @@
     </svg>
     <span>Toca para pasar la página</span>
   </div>
-
-  <div class="music" id="music">
-    <iframe id="spotifyEmbed"
-      src="https://open.spotify.com/embed/track/2mMZ6RsGVCUJwNuJekjlAx?utm_source=generator&theme=0"
-      height="80"
-      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-      loading="lazy"
-      title="Canción de la boda"></iframe>
-  </div>
 </div>
-
-<script src="https://open.spotify.com/embed/iframe-api/v1" async></script>
 
 <script>
 (function(){
@@ -533,34 +505,117 @@
     if (Math.abs(dx) > 30) flip(dx < 0 ? 'next' : 'prev');
   }, {passive:true});
 
-  // Start the song the moment the page is ready, quiet and steady (no
-  // volume ramp). Most browsers still block sound before any tap, so this
-  // also arms on the very first interaction anywhere on the page as a
-  // fallback in case the eager attempt was blocked.
-  var spotifyController = null;
-  var QUIET_VOLUME = 0.13;
+  // Ambient sound: soft sea waves + occasional morning birdsong, synthesized
+  // entirely in-browser (Web Audio API) rather than loaded from any file, so
+  // it starts instantly and plays quietly and continuously in the
+  // background. Browsers block audio before any user gesture, so this tries
+  // eagerly on load and also arms on the very first tap/click as a fallback.
+  var audioCtx = null;
+  var masterGain = null;
+  var ambientStarted = false;
 
-  function tryPlay(){
-    if (!spotifyController) return;
-    try {
-      if (typeof spotifyController.setVolume === 'function'){
-        spotifyController.setVolume(QUIET_VOLUME);
-      }
-      spotifyController.play();
-    } catch(err){}
+  function buildWaves(ctx, destination){
+    var bufferSeconds = 6;
+    var bufferSize = bufferSeconds * ctx.sampleRate;
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    var lastOut = 0;
+    for (var i = 0; i < bufferSize; i++){
+      var white = Math.random() * 2 - 1;
+      lastOut = (lastOut + 0.018 * white) / 1.018;
+      data[i] = lastOut * 3.2;
+    }
+
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+
+    var filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 620;
+
+    var waveGain = ctx.createGain();
+    waveGain.gain.value = 0.26;
+
+    noise.connect(filter);
+    filter.connect(waveGain);
+    waveGain.connect(destination);
+
+    // Slow swelling LFO so the waves breathe in and out like a real shore.
+    var lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.09;
+    var lfoGain = ctx.createGain();
+    lfoGain.gain.value = 0.14;
+    lfo.connect(lfoGain);
+    lfoGain.connect(waveGain.gain);
+
+    noise.start();
+    lfo.start();
   }
 
-  window.onSpotifyIframeApiReady = function(IFrameAPI){
-    var element = document.getElementById('spotifyEmbed');
-    var options = { uri: 'spotify:track:2mMZ6RsGVCUJwNuJekjlAx' };
-    IFrameAPI.createController(element, options, function(EmbedController){
-      spotifyController = EmbedController;
-      tryPlay();
-    });
-  };
+  function scheduleBirds(ctx, destination){
+    function chirp(){
+      var now = ctx.currentTime;
+      var notes = 2 + Math.floor(Math.random() * 3);
+      for (var n = 0; n < notes; n++){
+        var t = now + n * (0.09 + Math.random() * 0.05);
+        var startFreq = 2100 + Math.random() * 1400;
+        var endFreq = Math.max(startFreq - (350 + Math.random() * 500), 900);
 
-  document.addEventListener('pointerdown', tryPlay, {once:true, passive:true});
-  document.addEventListener('touchstart', tryPlay, {once:true, passive:true});
+        var osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(startFreq, t);
+        osc.frequency.exponentialRampToValueAtTime(endFreq, t + 0.07);
+
+        var g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(0.1, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+
+        osc.connect(g);
+        g.connect(destination);
+        osc.start(t);
+        osc.stop(t + 0.12);
+      }
+    }
+
+    function loop(){
+      chirp();
+      var delay = 2200 + Math.random() * 5200;
+      setTimeout(loop, delay);
+    }
+    setTimeout(loop, 1200 + Math.random() * 1500);
+  }
+
+  function startAmbient(){
+    if (ambientStarted) return;
+    ambientStarted = true;
+    try {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = 0.0001;
+      masterGain.connect(audioCtx.destination);
+      masterGain.gain.linearRampToValueAtTime(0.16, audioCtx.currentTime + 2.5);
+
+      buildWaves(audioCtx, masterGain);
+      scheduleBirds(audioCtx, masterGain);
+    } catch(err){
+      ambientStarted = false;
+    }
+  }
+
+  function ensureRunning(){
+    if (!ambientStarted){
+      startAmbient();
+    } else if (audioCtx && audioCtx.state === 'suspended'){
+      audioCtx.resume().catch(function(){});
+    }
+  }
+
+  ensureRunning();
+  document.addEventListener('pointerdown', ensureRunning, {passive:true});
+  document.addEventListener('touchstart', ensureRunning, {passive:true});
 })();
 </script>
 </body>
