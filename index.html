@@ -3,7 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Miren & Ale</title>
+<title>Boda de Azahar & Sal</title>
+<meta name="description" content="Miren & Ale — 3 de octubre de 2026, Isla de León. Todo lo que se pueda celebrar, se celebra.">
+<meta property="og:title" content="Boda de Azahar & Sal">
+<meta property="og:description" content="Miren & Ale — 3 de octubre de 2026, Isla de León. Todo lo que se pueda celebrar, se celebra.">
+<meta property="og:image" content="cover.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Boda de Azahar & Sal">
+<meta name="twitter:description" content="Miren & Ale — 3 de octubre de 2026, Isla de León.">
+<meta name="twitter:image" content="cover.jpg">
 <style>
   :root{
     --bg: #eef2ef;
@@ -73,6 +82,7 @@
     max-height:80vh;
     max-height:80dvh;
     flex: 0 1 auto;
+    -webkit-perspective: 1800px;
     perspective: 1800px;
     -webkit-tap-highlight-color: transparent;
     touch-action: pan-y;
@@ -90,6 +100,7 @@
     max-width:min(92vw, 640px);
     max-height:min(92vw, 640px);
     aspect-ratio: 1 / 1;
+    -webkit-transform-style:preserve-3d;
     transform-style:preserve-3d;
     transition: transform 0.7s cubic-bezier(.65,.05,.36,1);
     will-change: transform;
@@ -101,8 +112,11 @@
   .face{
     position:absolute;
     inset:0;
-    backface-visibility:hidden;
     -webkit-backface-visibility:hidden;
+    backface-visibility:hidden;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    will-change: transform;
     border-radius: 14px;
     overflow:visible;
     background:#fff;
@@ -111,7 +125,10 @@
     align-items:center;
     justify-content:center;
   }
-  .face.back{ transform: rotateY(180deg); }
+  .face.back{
+    -webkit-transform: rotateY(180deg) translateZ(0);
+    transform: rotateY(180deg) translateZ(0);
+  }
   .face.is-card-face{
     background:transparent;
     box-shadow:none;
