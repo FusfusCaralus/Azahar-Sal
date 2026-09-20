@@ -544,17 +544,17 @@
   var wantsPlay = false;
   var playConfirmed = false;
   var fadeRunning = false;
-  var TARGET_VOLUME = 0.09;
+  var TARGET_VOLUME = 0.055;
 
   function fadeIn(){
     if (fadeRunning) return;
     fadeRunning = true;
     if (!spotifyController || typeof spotifyController.setVolume !== 'function') return;
     // Very long, very gradual crescendo — starts essentially silent and
-    // eases up over about 45 seconds, curving slowly at first so the
+    // eases up over about 75 seconds, curving slowly at first so the
     // earliest steps are barely perceptible and the song never "jumps in".
-    var STEP_COUNT = 38;
-    var STEP_MS = 1180; // ~45 seconds total
+    var STEP_COUNT = 50;
+    var STEP_MS = 1500; // ~75 seconds total
     for (var i = 0; i <= STEP_COUNT; i++){
       (function(i){
         var progress = i / STEP_COUNT;
